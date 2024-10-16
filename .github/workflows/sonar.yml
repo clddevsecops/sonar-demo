@@ -16,6 +16,9 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v1
 
+      - name: Create Helm repositories directory
+        run: mkdir -p ~/.helm/repository && echo "repositories:" > ~/.helm/repository/repositories.yaml
+
       - name: Add Bitnami Helm repository
         run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
