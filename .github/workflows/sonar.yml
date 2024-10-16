@@ -23,6 +23,9 @@ jobs:
           helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
           helm repo update
 
+      - name: Create charts directory
+        run: mkdir -p ./charts
+
       - name: Download SonarQube Helm chart
         run: |
           helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts
@@ -30,10 +33,14 @@ jobs:
       - name: Log in to GitHub Container Registry
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u USERNAME --password-stdin
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build Docker image
         run: |
+          # Unpack the chart into the charts directory
+          tar -xzf ./charts/sonarqube-10.0.0.tgz -C ./charts
+
+          # Build the Docker image using the unpacked chart directory
           docker build -t ghcr.io/${{ github.repository_owner }}/sonarqube:latest ./charts/sonarqube
 
       - name: Push Docker image to GHCR
