@@ -1,0 +1,31 @@
+name: Download and Push SonarQube Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  download_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+
+      - name: Add Bitnami Helm repository
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Download SonarQube Helm chart
+        run: helm pull bitnami/sonarqube --untar
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and Push Helm chart to GHCR
+        run: |
+          docker build -t ghcr.io/clddevsecops/sonarqube:latest ./sonarqube
+          docker push ghcr.io/clddevsecops/sonarqube:latest
