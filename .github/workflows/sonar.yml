@@ -37,8 +37,14 @@ jobs:
 
       - name: Build Docker image
         run: |
-          # Unpack the chart into the charts directory
-          tar -xzf ./charts/sonarqube-10.0.0.tgz -C ./charts
+          # Check if the chart file exists before unpacking
+          if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
+            # Unpack the chart into the charts directory
+            tar -xzf ./charts/sonarqube-10.0.0.tgz -C ./charts
+          else
+            echo "Error: Chart file sonarqube-10.0.0.tgz not found!"
+            exit 1
+          fi
 
           # Build the Docker image using the unpacked chart directory
           docker build -t ghcr.io/${{ github.repository_owner }}/sonarqube:latest ./charts/sonarqube
