@@ -19,6 +19,9 @@ jobs:
       - name: Create Helm repositories directory
         run: mkdir -p ~/.helm/repository && echo "repositories:" > ~/.helm/repository/repositories.yaml
 
+      - name: Update Helm repositories
+        run: helm repo update
+
       - name: Add Bitnami Helm repository
         run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
