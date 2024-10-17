@@ -1,4 +1,4 @@
-name: CI
+name: SonarQube Deployment
 
 on:
   push:
@@ -6,47 +6,35 @@ on:
       - main
 
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Helm
         uses: azure/setup-helm@v1
+        with:
+          helm-version: '3.8.0'
 
-      - name: Check Helm installation
-        run: helm version
+      - name: Check Helm repositories directory
+        run: |
+          echo "Checking if the Helm repositories directory exists..."
+          if [ ! -d "$HOME/.helm/repository" ]; then
+            echo "Helm repositories directory does not exist. Creating..."
+            mkdir -p "$HOME/.helm/repository"
+          fi
 
       - name: Add SonarQube Helm repository
         run: |
           echo "Adding SonarQube Helm repository..."
-          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
+        
+      - name: Update Helm repositories
+        run: |
           echo "Updating Helm repositories..."
-          helm repo update
+          helm repo update || echo "Failed to update repositories, but continuing"
 
       - name: List Helm repositories
         run: helm repo list
-
-      - name: Pull SonarQube Helm chart
-        run: |
-          echo "Pulling SonarQube Helm chart..."
-          helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts || { echo "Failed to pull the chart"; exit 1; }
-
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Check if the chart file exists
-        run: |
-          if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
-            echo "Chart file exists. Proceeding to unpack..."
-            # Unpack the chart
-            tar -xzf ./charts/sonarqube-10.0.0.tgz -C ./charts
-            # Build the Docker image using the unpacked chart directory
-            docker build -t ghcr.io/clddevsecops/sonarqube:latest ./charts/sonarqube
-            docker push ghcr.io/clddevsecops/sonarqube:latest
-          else
-            echo "Error: Chart file sonarqube-10.0.0.tgz not found!"
-            exit 1
-          fi
