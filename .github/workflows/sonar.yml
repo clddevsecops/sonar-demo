@@ -10,42 +10,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Set up Helm
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Install Helm
         uses: azure/setup-helm@v1
 
       - name: Initialize Helm
-        run: helm init --client-only || echo "Helm init not required"
+        run: |
+          mkdir -p ~/.config/helm
+          touch ~/.config/helm/repositories.yaml || true
 
       - name: Add SonarQube Helm Repository
         run: |
           helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
 
-      - name: Update Helm Repositories
-        run: helm repo update
+      - name: Update Helm Repository
+        run: |
+          helm repo update || echo "Failed to update repos, but continuing"
 
-      - name: Pull SonarQube Chart
-        run: helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts
+      - name: Pull SonarQube Helm Chart
+        run: |
+          helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts || echo "Failed to pull the chart"
 
-      - name: Log in to GitHub Container Registry
+      - name: Docker Login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u clddevsecops --password-stdin
 
-      - name: Check if the chart file exists before unpacking
+      - name: Check if the chart file exists
         run: |
           if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
-            echo "Chart file found. Unpacking..."
+            echo "Chart file exists."
+          else
+            echo "Error: Chart file sonarqube-10.0.0.tgz not found!"
+            exit 1
+          fi
+
+      - name: Unpack the Chart
+        run: |
+          if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
             tar -xzf ./charts/sonarqube-10.0.0.tgz -C ./charts
           else
             echo "Error: Chart file sonarqube-10.0.0.tgz not found!"
             exit 1
           fi
 
-      - name: Build the Docker image
+      - name: Build Docker Image
         run: |
           docker build -t ghcr.io/clddevsecops/sonarqube:latest ./charts/sonarqube
-          
-      - name: Push the Docker image to GHCR
+
+      - name: Push Docker Image
         run: |
           docker push ghcr.io/clddevsecops/sonarqube:latest
