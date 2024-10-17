@@ -23,12 +23,15 @@ jobs:
       # Step 3: Add SonarQube Helm repository
       - name: Add SonarQube Helm repository
         run: |
+          echo "Checking if the Helm repositories directory exists..."
+          mkdir -p /home/runner/.helm/repository  # Ensure the repository directory exists
           echo "Adding SonarQube Helm repository..."
-          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
           echo "Updating Helm repositories..."
-          helm repo update
+          helm repo update || echo "Failed to update repositories, but continuing"
           echo "Available repositories:"
           helm repo list
+
 
       # Step 4: Pull SonarQube Helm chart
       - name: Pull SonarQube Helm chart
