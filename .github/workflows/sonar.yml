@@ -18,13 +18,15 @@ jobs:
         with:
           helm-version: '3.8.0'
 
-      - name: Check Helm repositories directory
+      - name: Initialize Helm
         run: |
-          echo "Checking if the Helm repositories directory exists..."
-          if [ ! -d "$HOME/.helm/repository" ]; then
-            echo "Helm repositories directory does not exist. Creating..."
-            mkdir -p "$HOME/.helm/repository"
-          fi
+          echo "Initializing Helm..."
+          helm init --client-only || echo "Helm already initialized"
+
+      - name: Create Helm repositories directory
+        run: |
+          echo "Creating Helm repositories directory..."
+          mkdir -p "$HOME/.helm/repository"
 
       - name: Add SonarQube Helm repository
         run: |
