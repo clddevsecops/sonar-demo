@@ -16,8 +16,12 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v1
 
+      - name: Initialize Helm
+        run: helm init --client-only || echo "Helm init not required"
+
       - name: Add SonarQube Helm Repository
-        run: helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube --force-update
+        run: |
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
 
       - name: Update Helm Repositories
         run: helm repo update
