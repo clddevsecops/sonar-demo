@@ -20,13 +20,7 @@ jobs:
         with:
           helm-version: '3.8.0'
 
-      # Step 3: Initialize Helm (create the repositories file)
-      - name: Initialize Helm
-        run: |
-          echo "Initializing Helm..."
-          helm init --client-only || echo "Helm is already initialized."
-
-      # Step 4: Add SonarQube Helm repository
+      # Step 3: Add SonarQube Helm repository
       - name: Add SonarQube Helm repository
         run: |
           echo "Adding SonarQube Helm repository..."
@@ -36,21 +30,21 @@ jobs:
           echo "Available repositories:"
           helm repo list
 
-      # Step 5: Pull SonarQube Helm chart
+      # Step 4: Pull SonarQube Helm chart
       - name: Pull SonarQube Helm chart
         run: |
           echo "Pulling SonarQube Helm chart version 10.0.0..."
           helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts
           echo "Successfully pulled the chart."
 
-      # Step 6: Log in to GitHub Container Registry
+      # Step 5: Login to GitHub Container Registry
       - name: Login to GHCR
         run: |
           echo "Logging in to GitHub Container Registry..."
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "clddevsecops" --password-stdin
           echo "Login succeeded."
 
-      # Step 7: Validate chart file existence
+      # Step 6: Validate chart file existence
       - name: Validate chart file existence
         run: |
           if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
@@ -60,14 +54,14 @@ jobs:
             exit 1
           fi
 
-      # Step 8: Build Docker image
+      # Step 7: Build Docker image
       - name: Build Docker image
         run: |
           echo "Building Docker image..."
           docker build -t ghcr.io/clddevsecops/sonarqube:latest ./charts/sonarqube
           echo "Docker image built successfully."
 
-      # Step 9: Push Docker image to GHCR
+      # Step 8: Push Docker image to GHCR
       - name: Push Docker image to GHCR
         run: |
           echo "Pushing Docker image to GitHub Container Registry..."
