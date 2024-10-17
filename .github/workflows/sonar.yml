@@ -21,8 +21,9 @@ jobs:
 
       - name: Initialize Helm
         run: |
+          # Create Helm directory and repository file if it does not exist
           mkdir -p ~/.config/helm
-          touch ~/.config/helm/repositories.yaml || true
+          echo "[]" > ~/.config/helm/repositories.yaml || true
 
       - name: Add SonarQube Helm Repository
         run: |
