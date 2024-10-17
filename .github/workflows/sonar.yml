@@ -7,21 +7,23 @@ on:
 
 jobs:
   download_and_push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Or use a runner image with Helm pre-installed
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Helm (optional, adjust version if needed)
-        uses: helm/charts@v3
-        with:
-          version: 'v3.10.3'
+      # Install Helm if not already available (Option 2)
+      - name: Install Helm (if needed)  # Uncomment if using Option 2
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/v3.10.3/scripts/get-helm.sh
+          chmod +x get_helm.sh
+          ./get_helm.sh
 
       - name: Login to GitHub Container Registry
         uses: docker/login@v2
         with:
-          username: ${{ secrets.GCR_USERNAME }}  # Replace with your GHCR username
+          username: ${{ secrets.GCR_USERNAME }}
           password: ${{ secrets.GCR_ACCESS_TOKEN }}
           registry: ghcr.io
 
