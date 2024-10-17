@@ -19,21 +19,12 @@ jobs:
       - name: Check Helm installation
         run: helm version
 
-      - name: Check if Helm repositories directory exists
-        run: |
-          if [ ! -d "$HOME/.helm/repository" ]; then
-            echo "Helm repositories directory does not exist. Creating..."
-            mkdir -p "$HOME/.helm/repository"
-          else
-            echo "Helm repositories directory exists."
-          fi
-
       - name: Add SonarQube Helm repository
         run: |
           echo "Adding SonarQube Helm repository..."
-          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
+          helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
           echo "Updating Helm repositories..."
-          helm repo update || echo "Failed to update repositories, but continuing"
+          helm repo update
 
       - name: List Helm repositories
         run: helm repo list
