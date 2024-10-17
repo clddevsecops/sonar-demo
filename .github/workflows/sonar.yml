@@ -1,4 +1,4 @@
-name: SonarQube Helm Chart Deployment
+name: SonarQube Helm Chart CI
 
 on:
   push:
@@ -10,38 +10,60 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Step 2: Set up Helm
       - name: Set up Helm
         uses: azure/setup-helm@v1
         with:
-          version: '3.8.0'  # Use a stable version of Helm
+          helm-version: '3.8.0'
 
-      - name: Add SonarQube Helm repo
+      # Step 3: Add SonarQube Helm repository
+      - name: Add SonarQube Helm repository
         run: |
+          echo "Adding SonarQube Helm repository..."
           helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube || echo "Repository already added"
-          helm repo update || echo "Failed to update repos, but continuing"
+          echo "Updating Helm repositories..."
+          helm repo update || echo "Failed to update repositories, but continuing"
+          echo "Available repositories:"
+          helm repo list
 
+      # Step 4: Pull SonarQube Helm chart
       - name: Pull SonarQube Helm chart
         run: |
-          helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts || echo "Failed to pull the chart"
+          echo "Pulling SonarQube Helm chart version 10.0.0..."
+          helm pull sonarqube/sonarqube --version 10.0.0 --destination ./charts || { echo "Failed to pull the chart"; exit 1; }
+          echo "Successfully pulled the chart."
 
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      # Step 5: Log in to GitHub Container Registry
+      - name: Login to GHCR
+        run: |
+          echo "Logging in to GitHub Container Registry..."
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "clddevsecops" --password-stdin
+          echo "Login succeeded."
 
-      - name: Build and push the Docker image
+      # Step 6: Validate chart file existence
+      - name: Validate chart file existence
         run: |
           if [ -f ./charts/sonarqube-10.0.0.tgz ]; then
-            docker build -t ghcr.io/clddevsecops/sonarqube:latest ./charts/sonarqube
-            docker push ghcr.io/clddevsecops/sonarqube:latest
+            echo "Chart file exists."
           else
             echo "Error: Chart file sonarqube-10.0.0.tgz not found!"
             exit 1
           fi
 
-      - name: Cleanup
+      # Step 7: Build Docker image
+      - name: Build Docker image
         run: |
-          echo "Cleaning up temporary files"
-          rm -rf ./charts/sonarqube-10.0.0.tgz
+          echo "Building Docker image..."
+          docker build -t ghcr.io/clddevsecops/sonarqube:latest ./charts/sonarqube
+          echo "Docker image built successfully."
 
+      # Step 8: Push Docker image to GHCR
+      - name: Push Docker image to GHCR
+        run: |
+          echo "Pushing Docker image to GitHub Container Registry..."
+          docker push ghcr.io/clddevsecops/sonarqube:latest
+          echo "Docker image pushed successfully."
